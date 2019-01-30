@@ -16,17 +16,9 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
-
+import static com.example.hashboard.HttpHandler.HttpPost;
 
 
 public class LoginActivity extends AppCompatActivity {
@@ -42,7 +34,7 @@ public class LoginActivity extends AppCompatActivity {
 
     ProgressDialog progressDialog;
     UserLoginTask userLoginTask;
-    String token = "";
+    HttpResponse response;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
     public void login() {
         Log.d(TAG, "Login");
 
-        if (!validate()) {
+        if (!validateFields()) {
             return;
         }
 
@@ -93,8 +85,8 @@ public class LoginActivity extends AppCompatActivity {
 
             try {
                 try {
-                    String result = HttpPost(urls[0]);
-                    return !result.equals("Unauthorized");
+                    response = HttpPost(urls[0], buidJsonObject());
+                    return response.isSuccesful();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     return false;
@@ -113,7 +105,12 @@ public class LoginActivity extends AppCompatActivity {
                 _loginButton.setEnabled(true);
                 finish();
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                intent.putExtra("token", token);
+                try{
+                    intent.putExtra("token", response.getJSONObject().getString("token"));
+                } catch(JSONException e) {
+                    e.printStackTrace();
+                }
+
                 startActivityForResult(intent, REQUEST_MAIN);
             } else {
                 Toast.makeText(getBaseContext(), "Invalid credentials.", Toast.LENGTH_LONG).show();
@@ -134,30 +131,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
-    private String HttpPost(String myUrl) throws IOException, JSONException {
-
-        URL url = new URL(myUrl);
-
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-
-        JSONObject jsonObject = buidJsonObject();
-
-        conn.connect();
-        setPostRequestContent(conn, jsonObject);
-
-        if(conn.getResponseCode()==201 || conn.getResponseCode()==200)
-        {
-            JSONObject response = new JSONObject(InputParser.convertStreamToString(conn.getInputStream()));
-            token = response.getString("token");
-        }
-
-        return conn.getResponseMessage()+"";
-
-    }
-
     private JSONObject buidJsonObject() throws JSONException {
 
         JSONObject userObject = new JSONObject();
@@ -168,37 +141,19 @@ public class LoginActivity extends AppCompatActivity {
         return jsonObject;
     }
 
-    private void setPostRequestContent(HttpURLConnection conn,
-                                       JSONObject jsonObject) throws IOException {
-
-        OutputStream os = conn.getOutputStream();
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-        writer.write(jsonObject.toString());
-        Log.i(MainActivity.class.toString(), jsonObject.toString());
-        writer.flush();
-        writer.close();
-        os.close();
-    }
-
-
-    public boolean validate() {
-        boolean valid = true;
-
-        String username = _usernameText.getText().toString();
-        String password = _passwordText.getText().toString();
-
-        if (username.isEmpty()) {
+    private boolean validateFields() {
+        if (_usernameText.getText().toString().isEmpty()) {
             _usernameText.setError("Enter an username.");
-            valid = false;
+            return false;
         } else {
             _usernameText.setError(null);
         }
-        if (password.isEmpty()) {
+        if (_passwordText.getText().toString().isEmpty()) {
             _passwordText.setError("Enter a password.");
-            valid = false;
+            return false;
         } else {
             _passwordText.setError(null);
         }
-        return valid;
+        return true;
     }
 }

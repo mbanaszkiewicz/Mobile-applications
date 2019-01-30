@@ -13,18 +13,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-
+import static com.example.hashboard.HttpHandler.HttpPost;
 
 
 public class SignupActivity extends AppCompatActivity {
@@ -38,6 +30,8 @@ public class SignupActivity extends AppCompatActivity {
 
     ProgressDialog progressDialog;
     UserCreateTask userCreateTask;
+    HttpResponse response;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,7 +53,6 @@ public class SignupActivity extends AppCompatActivity {
         _loginLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Finish the registration screen and return to the Login activity
                 finish();
             }
         });
@@ -69,7 +62,6 @@ public class SignupActivity extends AppCompatActivity {
         Log.d(TAG, "Signup");
 
         if (!validate()) {
-            onSignupFailed();
             return;
         }
 
@@ -82,14 +74,43 @@ public class SignupActivity extends AppCompatActivity {
         userCreateTask.execute(getString(R.string.sign_up));
     }
 
+    public boolean validate() {
+
+        String username = _usernameText.getText().toString();
+        String password = _passwordText.getText().toString();
+        String confirmation = _confirmText.getText().toString();
+
+        if (username.isEmpty() || username.length() < 3) {
+            _usernameText.setError("Username must be at least 3 characters long.");
+            return false;
+        } else {
+            _usernameText.setError(null);
+        }
+
+        if (password.isEmpty() || password.length() < 6) {
+            _passwordText.setError("Password must be at least 4 characters long.");
+            return false;
+        } else {
+            _passwordText.setError(null);
+        }
+
+        if (confirmation.isEmpty() || !confirmation.equals(password)) {
+            _confirmText.setError("Passwords are not equal.");
+            return false;
+        } else {
+            _confirmText.setError(null);
+        }
+        return true;
+    }
+
     private class UserCreateTask extends AsyncTask<String, Void, Boolean> {
         @Override
         protected Boolean doInBackground(String... urls) {
 
             try {
                 try {
-                    HttpPost(urls[0]);
-                    return true;
+                    response = HttpPost(urls[0], buidJsonObject());
+                    return response.isSuccesful();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     return false;
@@ -98,44 +119,25 @@ public class SignupActivity extends AppCompatActivity {
                 return false;
             }
         }
-
         @Override
         protected void onPostExecute(Boolean success) {
             userCreateTask = null;
             progressDialog.dismiss();
 
             if (success) {
+                Intent intent = new Intent();
+                try{
+                    intent.putExtra("token", response.getJSONObject().getString("token"));
+                } catch (JSONException e){
+                    e.printStackTrace();
+                }
+                setResult(Activity.RESULT_OK, intent);
                 _signupButton.setEnabled(true);
                 finish();
             } else {
-                Toast.makeText(getBaseContext(), "Eror.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getBaseContext(), "Sign up error.", Toast.LENGTH_LONG).show();
                 _signupButton.setEnabled(true);
             }
-        }
-    }
-        private String HttpPost(String myUrl) throws IOException, JSONException {
-
-            URL url = new URL(myUrl);
-
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-
-            JSONObject jsonObject = buidJsonObject();
-
-            setPostRequestContent(conn, jsonObject);
-
-            conn.connect();
-
-            if(conn.getResponseCode()==201 || conn.getResponseCode()==200)
-            {
-                Intent intent = new Intent();
-                intent.putExtra("token", InputParser.convertStreamToString(conn.getInputStream()));
-                setResult(Activity.RESULT_OK, intent);
-            }
-
-            return conn.getResponseMessage()+"";
-
         }
 
         private JSONObject buidJsonObject() throws JSONException {
@@ -148,60 +150,6 @@ public class SignupActivity extends AppCompatActivity {
             jsonObject.accumulate("user", userObject);
             return jsonObject;
         }
-
-        private void setPostRequestContent(HttpURLConnection conn,
-                                           JSONObject jsonObject) throws IOException {
-
-            OutputStream os = conn.getOutputStream();
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-            writer.write(jsonObject.toString());
-            Log.i(MainActivity.class.toString(), jsonObject.toString());
-            writer.flush();
-            writer.close();
-            os.close();
-        }
-    public void onSignupSuccess() {
-        _signupButton.setEnabled(true);
-        setResult(RESULT_OK, null);
-        finish();
     }
 
-    public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
-
-        _signupButton.setEnabled(true);
-    }
-
-    public boolean validate() {
-        boolean valid = true;
-
-
-        String username = _usernameText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String confirm = _confirmText.getText().toString();
-
-
-        if (username.isEmpty() || username.length() < 3) {
-            _usernameText.setError("Username must be at least 3 characters long.");
-            valid = false;
-        } else {
-            _usernameText.setError(null);
-        }
-
-        if (password.isEmpty() || password.length() < 4 ) {
-            _passwordText.setError("Password must be at least 4 characters long.");
-            valid = false;
-        } else {
-            _passwordText.setError(null);
-        }
-
-        if (confirm.isEmpty() || !confirm.equals(password)) {
-            _confirmText.setError("Passwords are not equal.");
-            valid = false;
-        } else {
-            _confirmText.setError(null);
-        }
-
-        return valid;
-    }
 }
