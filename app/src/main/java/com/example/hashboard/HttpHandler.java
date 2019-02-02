@@ -19,14 +19,16 @@ import java.net.URL;
 
 public class HttpHandler {
 
-
-    public static HttpResponse HttpPost(String myUrl, JSONObject json) throws IOException, JSONException {
+    public static HttpResponse HttpPost(String myUrl, JSONObject json, String token) throws IOException, JSONException {
 
         URL url = new URL(myUrl);
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        if(token != null){
+            conn.setRequestProperty("Authorization", "Token " + token);
+        }
 
         conn.connect();
         setPostRequestContent(conn, json);
@@ -41,6 +43,34 @@ public class HttpHandler {
         } else{
             response.setJSONObject(null);
         }
+        conn.disconnect();
+        return response;
+
+    }
+
+    public static HttpResponse HttpGet (String myUrl, String token) throws IOException, JSONException {
+
+        URL url = new URL(myUrl);
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        if(token != null){
+            conn.setRequestProperty("Authorization", "Token " + token);
+        }
+
+        conn.connect();
+        HttpResponse response = new HttpResponse();
+        response.setCode(conn.getResponseCode());
+
+        if(response.isSuccesful())
+        {
+            JSONObject responseJSON = new JSONObject(convertStreamToString(conn.getInputStream()));
+            response.setJSONObject(responseJSON);
+        } else{
+            response.setJSONObject(null);
+        }
+        conn.disconnect();
         return response;
 
     }
@@ -51,7 +81,6 @@ public class HttpHandler {
         OutputStream os = conn.getOutputStream();
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
         writer.write(jsonObject.toString());
-        Log.i(MainActivity.class.toString(), jsonObject.toString());
         writer.flush();
         writer.close();
         os.close();

@@ -32,9 +32,9 @@
                 android:id="@+id/login_username"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="@string/usernames"
+                android:hint="@string/username"
                 android:inputType="text"
-                tools:text="@string/usernames" />
+                tools:text="@string/username" />
         </android.support.design.widget.TextInputLayout>
 
         <!-- Password Label -->

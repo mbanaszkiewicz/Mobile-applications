@@ -15,6 +15,13 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
-    <string name="usernames">Username</string>
+    <string name="username">Username</string>
     <string name="title_activity_xd">Sign in</string>
+    <string name="userPosts">Your posts</string>
+    <string name="send">Send a post</string>
+    <string name="find">Find topic\'s posts</string>
+    <string name="title_activity_post">PostActivity</string>
+    <string name="Topic">Topic</string>
+    <string name="Post">Message</string>
+    <string name="GETPOSTS">Get posts</string>
 </resources>

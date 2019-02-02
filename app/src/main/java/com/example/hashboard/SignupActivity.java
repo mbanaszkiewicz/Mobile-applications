@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,37 +19,38 @@ import static com.example.hashboard.HttpHandler.HttpPost;
 
 
 public class SignupActivity extends AppCompatActivity {
+
     private static final String TAG = "SignupActivity";
 
-     EditText _usernameText;
-     EditText _passwordText;
-     EditText _confirmText;
-     Button _signupButton;
-     TextView _loginLink;
+    private EditText mUsernameText;
+    private EditText mPasswordText;
+    private EditText mConfirmationText;
+    private Button mSignupButton;
+    private TextView mLoginLink;
 
-    ProgressDialog progressDialog;
-    UserCreateTask userCreateTask;
-    HttpResponse response;
+    private ProgressDialog mProgressDialog;
+    private UserCreateTask mUserCreateTask;
+    private HttpResponse mResponse;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
-        _usernameText = findViewById(R.id.signup_username);
-        _passwordText = findViewById(R.id.signup_password);
-        _confirmText = findViewById(R.id.signup_confirm);
-        _signupButton = findViewById(R.id.btn_signup);
-        _loginLink = findViewById(R.id.link_login);
+        mUsernameText = findViewById(R.id.signup_username);
+        mPasswordText = findViewById(R.id.signup_password);
+        mConfirmationText = findViewById(R.id.signup_confirm);
+        mSignupButton = findViewById(R.id.btn_signup);
+        mLoginLink = findViewById(R.id.link_login);
 
-        _signupButton.setOnClickListener(new View.OnClickListener() {
+        mSignupButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 signup();
             }
         });
 
-        _loginLink.setOnClickListener(new View.OnClickListener() {
+        mLoginLink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
@@ -59,47 +59,45 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     public void signup() {
-        Log.d(TAG, "Signup");
 
         if (!validate()) {
             return;
         }
 
-        _signupButton.setEnabled(false);
+        mSignupButton.setEnabled(false);
+        mProgressDialog = ProgressDialog.show(this, null, "Creating account...", true, true);
 
-        _signupButton.setEnabled(false);
-        progressDialog = progressDialog.show(this, null, "Creating account...", true, true);
-
-        userCreateTask = new UserCreateTask();
-        userCreateTask.execute(getString(R.string.sign_up));
+        mUserCreateTask = new UserCreateTask();
+        mUserCreateTask.execute(getString(R.string.SIGN_UP));
     }
 
     public boolean validate() {
 
-        String username = _usernameText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String confirmation = _confirmText.getText().toString();
+        String username = mUsernameText.getText().toString();
+        String password = mPasswordText.getText().toString();
+        String confirmation = mConfirmationText.getText().toString();
 
         if (username.isEmpty() || username.length() < 3) {
-            _usernameText.setError("Username must be at least 3 characters long.");
+            mUsernameText.setError("What is your name?");
             return false;
         } else {
-            _usernameText.setError(null);
+            mUsernameText.setError(null);
         }
 
         if (password.isEmpty() || password.length() < 6) {
-            _passwordText.setError("Password must be at least 4 characters long.");
+            mPasswordText.setError("What is your quest?");
             return false;
         } else {
-            _passwordText.setError(null);
+            mPasswordText.setError(null);
         }
 
         if (confirmation.isEmpty() || !confirmation.equals(password)) {
-            _confirmText.setError("Passwords are not equal.");
+            mConfirmationText.setError("What is the airspeed velocity of an unladen swallow?");
             return false;
         } else {
-            _confirmText.setError(null);
+            mConfirmationText.setError(null);
         }
+
         return true;
     }
 
@@ -109,8 +107,8 @@ public class SignupActivity extends AppCompatActivity {
 
             try {
                 try {
-                    response = HttpPost(urls[0], buidJsonObject());
-                    return response.isSuccesful();
+                    mResponse = HttpPost(urls[0], buidJsonObject(), null);
+                    return mResponse.isSuccesful();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     return false;
@@ -121,33 +119,34 @@ public class SignupActivity extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(Boolean success) {
-            userCreateTask = null;
-            progressDialog.dismiss();
+
+            mUserCreateTask = null;
+            mProgressDialog.dismiss();
 
             if (success) {
                 Intent intent = new Intent();
                 try{
-                    intent.putExtra("token", response.getJSONObject().getString("token"));
+                    intent.putExtra(getString(R.string.TOKEN), mResponse.getJSONObject().getString("token"));
                 } catch (JSONException e){
                     e.printStackTrace();
                 }
                 setResult(Activity.RESULT_OK, intent);
-                _signupButton.setEnabled(true);
+                mSignupButton.setEnabled(true);
                 finish();
             } else {
-                Toast.makeText(getBaseContext(), "Sign up error.", Toast.LENGTH_LONG).show();
-                _signupButton.setEnabled(true);
+                Toast.makeText(getBaseContext(), "E44O4", Toast.LENGTH_LONG).show();
+                mSignupButton.setEnabled(true);
             }
         }
 
         private JSONObject buidJsonObject() throws JSONException {
 
             JSONObject jsonObject = new JSONObject();
-            JSONObject userObject = new JSONObject();
-            userObject.accumulate("username", _usernameText.getText().toString());
-            userObject.accumulate("password",  _passwordText.getText().toString());
-            userObject.accumulate("password_confirmation",  _passwordText.getText().toString());
-            jsonObject.accumulate("user", userObject);
+            JSONObject userJsonObject = new JSONObject();
+            userJsonObject.accumulate("username", mUsernameText.getText().toString());
+            userJsonObject.accumulate("password",  mPasswordText.getText().toString());
+            userJsonObject.accumulate("password_confirmation",  mPasswordText.getText().toString());
+            jsonObject.accumulate("user", userJsonObject);
             return jsonObject;
         }
     }

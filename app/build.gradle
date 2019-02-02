@@ -11,9 +11,11 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        debug{
-            resValue("string", "sign_up", " http://10.0.2.2:3000/signup ")
-            resValue("string", "sign_in", " http://10.0.2.2:3000/signin ")
+        debug {
+            resValue("string", "SIGN_UP", " http://10.0.2.2:3000/signup ")
+            resValue("string", "SIGN_IN", " http://10.0.2.2:3000/signin ")
+            resValue("string", "POST", " http://10.0.2.2:3000 ")
+            resValue("string", "TOKEN", "token")
         }
         release {
             minifyEnabled false
@@ -33,4 +35,5 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.google.code.gson:gson:2.8.5'
+    implementation 'com.android.support:recyclerview-v7:28.0.0'
 }

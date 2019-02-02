@@ -23,7 +23,7 @@ import java.io.IOException;
 import static com.example.hashboard.HttpHandler.HttpGet;
 import static com.example.hashboard.HttpHandler.HttpPost;
 
-public class TopicActivity extends AppCompatActivity {
+public class PostsActivity extends AppCompatActivity {
 
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
